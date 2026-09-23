@@ -32,5 +32,5 @@ if (Test-Path -LiteralPath $pnpmPath) {
 if ($LASTEXITCODE -ne 0) { throw 'Build failed. See the error above.' }
 Write-Host 'Open http://localhost:3000 in your browser. Keep this window open. Ctrl+C stops the app.'
 Write-Host 'Set OPENAI_API_KEY in .env and restart this script to enable AI matching.'
-& $nodePath --env-file=.env server.ts
+& $nodePath --use-system-ca --env-file=.env server.ts
 exit $LASTEXITCODE

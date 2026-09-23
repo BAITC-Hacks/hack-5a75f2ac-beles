@@ -7,7 +7,7 @@
   "packageManager": "pnpm@11.19.0",
   "scripts": {
     "build": "tsc --noEmit && vite build",
-    "start": "node --env-file-if-exists=.env server.ts",
+    "start": "node --use-system-ca --env-file-if-exists=.env server.ts",
     "test": "node --test tests/server.test.ts",
     "import:data": "node scripts/import-contractors.mjs",
     "dev": "vite --host 127.0.0.1"

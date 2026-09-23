@@ -20,6 +20,10 @@ React + TypeScript + Node.js 24, OpenAI Responses API (`gpt-4.1-mini`).
 приложение. Ключ можно создать на https://platform.openai.com/api-keys в проекте,
 которому доступны ваши API-кредиты. Ключ не нужно присылать в чат.
 
+Скрипт запуска использует доверенные системные сертификаты (`--use-system-ca`),
+чтобы HTTPS-запросы к OpenAI работали и в сетях с установленным корпоративным
+сертификатом. Проверка HTTPS остаётся включённой.
+
 Если порт 3000 уже занят предыдущим запуском, используйте работающую страницу
 или остановите предыдущее окно перед повторным запуском.
 
@@ -124,7 +128,7 @@ node scripts/import-contractors.mjs
 npm exec --yes --package=pnpm@11.19.0 -- pnpm install --frozen-lockfile
 npm exec --yes --package=pnpm@11.19.0 -- pnpm test
 npm exec --yes --package=pnpm@11.19.0 -- pnpm build
-node --env-file-if-exists=.env server.ts
+node --use-system-ca --env-file-if-exists=.env server.ts
 ```
 
 Тесты проверяют фильтры, границу бюджета, редкие и пустые категории, null-часов,
