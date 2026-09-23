@@ -14,7 +14,7 @@ WORKDIR /app
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=3000
 COPY --from=build --chown=node:node /app/dist ./dist
 COPY --from=build --chown=node:node /app/server.ts /app/package.json ./
-COPY --from=build --chown=node:node /app/src/types.ts ./src/types.ts
+COPY --from=build --chown=node:node /app/src ./src
 COPY --from=build --chown=node:node /app/data ./data
 USER node
 EXPOSE 3000

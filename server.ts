@@ -4,18 +4,12 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { resolve, extname } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Contractor, MatchResponse } from "./src/types";
+import { evaluateCatalog, localExplanation } from "./src/server/matching.ts";
+import type { MatchRequest } from "./src/server/matching.ts";
 
 const OPENAI_MODEL = "gpt-4.1-mini";
 const DEFAULT_CONTRACTORS_FILE = new URL("./data/contractors.json", import.meta.url);
 const MAX_BODY_BYTES = 16 * 1024;
-
-type MatchRequest = {
-  city: string;
-  date: string;
-  category: string;
-  format: string;
-  budget: number;
-};
 
 type ServerOptions = {
   contractorsFile?: string | URL;
@@ -64,11 +58,13 @@ function isContractor(value: unknown): value is Contractor {
     && isNonnegativeNumber(value.price_from_kzt)
     && isStringArray(value.event_formats)
     && isStringArray(value.languages)
-    && isNonnegativeNumber(value.max_hours)
+    && (value.max_hours === null || isNonnegativeNumber(value.max_hours))
     && Array.isArray(value.busy_dates)
     && value.busy_dates.every(isDate)
     && isText(value.description)
-    && typeof value.synthetic === "boolean";
+    && typeof value.synthetic === "boolean"
+    && (value.city_imputed === undefined || typeof value.city_imputed === "boolean")
+    && (value.price_imputed === undefined || typeof value.price_imputed === "boolean");
 }
 
 async function loadContractors(file: string | URL): Promise<Contractor[]> {
@@ -112,9 +108,11 @@ async function readMatchRequest(request: IncomingMessage): Promise<MatchRequest>
     || !isText(data.city) || data.city.length > 100
     || !isText(data.category) || data.category.length > 100
     || !isText(data.format) || data.format.length > 100
-    || !isDate(data.date) || data.date < "2026-09-23"
-    || !isNonnegativeNumber(data.budget)) {
-    throw new HttpError(400, "Проверьте город, дату, категорию, формат и бюджет. Дата — не раньше 23.09.2026, бюджет — число от нуля.");
+    || !isDate(data.date) || data.date < "2026-09-23" || data.date > "2026-12-31"
+    || !isNonnegativeNumber(data.budget)
+    || (data.language !== undefined && (!isText(data.language) || data.language.length > 100))
+    || (data.duration_hours !== undefined && (!isNonnegativeNumber(data.duration_hours) || data.duration_hours <= 0))) {
+    throw new HttpError(400, "Проверьте параметры: дата с 23.09.2026 по 31.12.2026, бюджет от нуля, длительность больше нуля.");
   }
 
   return {
@@ -123,32 +121,9 @@ async function readMatchRequest(request: IncomingMessage): Promise<MatchRequest>
     category: data.category.trim(),
     format: data.format.trim(),
     budget: data.budget,
+    ...(data.language === undefined ? {} : { language: (data.language as string).trim() }),
+    ...(data.duration_hours === undefined ? {} : { duration_hours: data.duration_hours as number }),
   };
-}
-
-function normalize(value: string): string {
-  return value.trim().toLocaleLowerCase("ru-KZ");
-}
-
-function selectCandidates(allContractors: Contractor[], input: MatchRequest): Contractor[] {
-  const city = normalize(input.city);
-  const category = normalize(input.category);
-  const format = normalize(input.format);
-  const supportsFormat = (contractor: Contractor) =>
-    contractor.event_formats.some((item) => normalize(item) === format);
-
-  return allContractors
-    .filter((contractor) =>
-      !contractor.busy_dates.includes(input.date)
-      && normalize(contractor.city) === city
-      && contractor.categories.some((item) => normalize(item) === category)
-      && contractor.price_from_kzt <= input.budget * 1.1)
-    // Format ranks candidates but is deliberately not an extra hard filter.
-    .sort((left, right) =>
-      Number(supportsFormat(right)) - Number(supportsFormat(left))
-      || left.price_from_kzt - right.price_from_kzt
-      || left.id.localeCompare(right.id, "en"))
-    .slice(0, 5);
 }
 
 async function generateJson(
@@ -165,7 +140,7 @@ async function generateJson(
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        signal: AbortSignal.timeout(30_000),
+        signal: AbortSignal.timeout(7_500),
         body: JSON.stringify({
           model: process.env.OPENAI_MODEL || OPENAI_MODEL,
           store: false,
@@ -201,80 +176,67 @@ async function matchContractors(input: MatchRequest, options: ServerOptions): Pr
   const allContractors = await loadContractors(
     options.contractorsFile ?? process.env.CONTRACTORS_FILE ?? DEFAULT_CONTRACTORS_FILE,
   );
-  const candidates = selectCandidates(allContractors, input);
+  const evaluation = evaluateCatalog(allContractors, input);
+  const { status, message, summary, candidates, selected } = evaluation;
+  if (selected.length === 0) return { status, matches: [], message, summary };
 
-  if (candidates.length === 0) {
-    const refusal = await generateJson(
-      "После проверки свободной даты, города, категории и цены в пределах бюджета + 10% подходящих подрядчиков не найдено. "
-      + "Напиши вежливый отказ в 1–2 предложениях и предложи изменить условия поиска. "
-      + "Не утверждай конкретную причину отсутствия кандидатов и не выдумывай альтернативы.\n"
-      + `Данные запроса: ${JSON.stringify(input)}`,
+  // The server fixes membership and order. The LLM only explains these IDs.
+  const localMatches = selected.map((contractor) => ({
+    contractor, explanation: localExplanation(contractor, input),
+  }));
+  const fallback: MatchResponse = {
+    status, matches: localMatches, message, summary, explanation_source: "local",
+  };
+  if (!(options.apiKey ?? process.env.OPENAI_API_KEY)?.trim()) return fallback;
+
+  try {
+    const selectedIds = selected.map((contractor) => contractor.id);
+    const result = await generateJson(
+      "Для каждого ID из selected_ids напиши 1–2 конкретных предложения: почему этот подрядчик подходит запросу. "
+      + "Состав и порядок выбраны сервером: не добавляй и не удаляй ID. "
+      + "Укажи свободную дату, соответствие формату и бюджету, если заданы — языку и длительности. "
+      + "Обязательно приведи уникальную особенность из description, чтобы объяснения разных профилей нельзя было поменять местами. "
+      + "Не используй общие фразы вроде «отличный выбор» или «идеально подходит». "
+      + "max_hours=null означает, что работа не привязана к присутствию. Цена — стартовая; превышение бюджета до 10% обязательно назови. "
+      + "Не обещай бронирование, скидки или услуги, которых нет в данных.\n"
+      + `Данные для объяснений: ${JSON.stringify({ request: input, candidates, selected_ids: selectedIds })}`,
       {
         type: "object",
-        properties: { message: { type: "string" } },
-        required: ["message"],
-        additionalProperties: false,
+        properties: {
+          matches: {
+            type: "array", minItems: selected.length, maxItems: selected.length,
+            items: {
+              type: "object",
+              properties: {
+                contractor_id: { type: "string", enum: selectedIds },
+                explanation: { type: "string" },
+              },
+              required: ["contractor_id", "explanation"], additionalProperties: false,
+            },
+          },
+        },
+        required: ["matches"], additionalProperties: false,
       },
       options,
     );
-    if (!isRecord(refusal) || !isText(refusal.message)) {
-      throw new HttpError(502, "Сервис ИИ не смог сформировать ответ. Попробуйте ещё раз.");
+    if (!isRecord(result) || !Array.isArray(result.matches) || result.matches.length !== selected.length) return fallback;
+    const explanations = new Map<string, string>();
+    for (const item of result.matches) {
+      if (!isRecord(item) || !isText(item.contractor_id) || !isText(item.explanation)
+        || !selectedIds.includes(item.contractor_id) || explanations.has(item.contractor_id)
+        || item.explanation.length > 2000
+        || /отличный выбор|идеально подходит|лучший выбор/iu.test(item.explanation)) return fallback;
+      explanations.set(item.contractor_id, item.explanation.trim());
     }
-    return { matches: [], message: refusal.message.trim() };
+    return {
+      status, message, summary, explanation_source: "openai",
+      matches: selected.map((contractor) => ({ contractor, explanation: explanations.get(contractor.id)! })),
+    };
+  } catch {
+    // Missing credits, timeouts and model failures still leave a usable, labelled catalog recommendation.
+    return fallback;
   }
-
-  const selection = await generateJson(
-    "Выбери до 3 лучших и напиши 1-2 предложения конкретного объяснения для каждого, опираясь на их description.\n"
-    + "Выбирай только из переданных кандидатов, возвращай их точные contractor_id без повторений. "
-    + "Учитывай желаемый формат. Не обещай услуги, отсутствующие в description. "
-    + "Если цена выше бюджета, прямо укажи превышение в объяснении.\n"
-    + `Данные запроса: ${JSON.stringify(input)}\n`
-    + `Кандидаты: ${JSON.stringify(candidates)}`,
-    {
-      type: "object",
-      properties: {
-        matches: {
-          type: "array",
-          minItems: 1,
-          maxItems: 3,
-          items: {
-            type: "object",
-            properties: {
-              contractor_id: { type: "string", enum: candidates.map((contractor) => contractor.id) },
-              explanation: { type: "string" },
-            },
-            required: ["contractor_id", "explanation"],
-            additionalProperties: false,
-          },
-        },
-      },
-      required: ["matches"],
-      additionalProperties: false,
-    },
-    options,
-  );
-
-  if (!isRecord(selection) || !Array.isArray(selection.matches)
-    || selection.matches.length === 0 || selection.matches.length > 3) {
-    throw new HttpError(502, "Сервис ИИ вернул некорректный подбор. Попробуйте ещё раз.");
-  }
-
-  const candidatesById = new Map(candidates.map((contractor) => [contractor.id, contractor]));
-  const seenIds = new Set<string>();
-  const matches: MatchResponse["matches"] = selection.matches.map((item: unknown) => {
-    if (!isRecord(item) || !isText(item.contractor_id) || !isText(item.explanation)) {
-      throw new HttpError(502, "Сервис ИИ вернул некорректный подбор. Попробуйте ещё раз.");
-    }
-    const contractor = candidatesById.get(item.contractor_id);
-    if (!contractor || seenIds.has(contractor.id)) {
-      throw new HttpError(502, "Сервис ИИ вернул некорректный подбор. Попробуйте ещё раз.");
-    }
-    seenIds.add(contractor.id);
-    return { contractor, explanation: item.explanation.trim() };
-  });
-  return { matches, message: "" };
 }
-
 function sendJson(response: ServerResponse, status: number, body: MatchResponse): void {
   response.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
@@ -327,6 +289,7 @@ export function createMatchServer(options: ServerOptions = {}) {
       sendJson(response, 200, await matchContractors(input, options));
     } catch (error) {
       sendJson(response, error instanceof HttpError ? error.status : 500, {
+        status: "error",
         matches: [],
         message: error instanceof HttpError ? error.message : "Не удалось выполнить подбор. Попробуйте позже.",
       });

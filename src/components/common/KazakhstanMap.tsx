@@ -1,234 +1,168 @@
 import { useId, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import type { Contractor } from "../../types";
+import "./KazakhstanMap.css";
 
 type MarkerType = "venue" | "talent" | "service";
-
-type DemoMarker = Pick<
-  Contractor,
-  "id" | "anon_name" | "city" | "price_from_kzt"
-> & {
+type Category = "all" | MarkerType;
+type MapMarker = {
+  id: string;
   type: MarkerType;
-  // Coordinates are percentages of the SVG viewBox.
+  contractor: Pick<Contractor, "anon_name" | "city" | "categories" | "price_from_kzt">;
   x: number;
   y: number;
+  offsetX?: number;
+  offsetY?: number;
 };
 
-const DEMO_MARKERS: DemoMarker[] = [
-  { id: "demo-1", anon_name: "Зал у Каспия", type: "venue", city: "Атырау", price_from_kzt: 250000, x: 18, y: 53 },
-  { id: "demo-2", anon_name: "Ведущий Арман", type: "talent", city: "Актобе", price_from_kzt: 120000, x: 29, y: 36 },
-  { id: "demo-3", anon_name: "Свет и звук", type: "service", city: "Астана", price_from_kzt: 90000, x: 61, y: 33 },
-  { id: "demo-4", anon_name: "Студия декора", type: "service", city: "Караганда", price_from_kzt: 75000, x: 64, y: 47 },
-  { id: "demo-5", anon_name: "Группа Saz", type: "talent", city: "Шымкент", price_from_kzt: 180000, x: 55, y: 77 },
-  { id: "demo-6", anon_name: "Сад Алматы", type: "venue", city: "Алматы", price_from_kzt: 350000, x: 79, y: 72 },
+// Display coordinates from the supplied design, not verified geographic locations.
+// Pixel offsets keep nearby demo markers independently clickable.
+const DEMO_MARKERS: MapMarker[] = [
+  { id: "1", type: "talent", x: 75.3, y: 78, offsetX: -24, offsetY: -22, contractor: { anon_name: "Буллма", city: "Алматы", categories: ["Ведущий"], price_from_kzt: 1000000 } },
+  { id: "2", type: "venue", x: 76.8, y: 79.5, offsetX: 24, offsetY: -10, contractor: { anon_name: "Иноскэ Хашибира", city: "Алматы", categories: ["Банкетный зал"], price_from_kzt: 2500000 } },
+  { id: "3", type: "service", x: 74, y: 76.5, offsetX: -6, offsetY: 32, contractor: { anon_name: "Тони Тони Чоппер", city: "Алматы", categories: ["Флорист"], price_from_kzt: 200000 } },
+  { id: "4", type: "talent", x: 62.3, y: 29.4, offsetX: -24, offsetY: -18, contractor: { anon_name: "Санджи Виндсмок", city: "Астана", categories: ["Ведущий"], price_from_kzt: 800000 } },
+  { id: "5", type: "service", x: 63.8, y: 27.5, offsetX: 24, offsetY: -10, contractor: { anon_name: "Тодороки Шото", city: "Астана", categories: ["Видеограф"], price_from_kzt: 400000 } },
+  { id: "6", type: "service", x: 60.5, y: 31, offsetX: -3, offsetY: 27, contractor: { anon_name: "Хаку", city: "Астана", categories: ["Флорист"], price_from_kzt: 300000 } },
+  { id: "7", type: "venue", x: 28.2, y: 34.3, contractor: { anon_name: "Grand Hotel", city: "Актобе", categories: ["Отель"], price_from_kzt: 1200000 } },
+  { id: "8", type: "talent", x: 58, y: 83.5, contractor: { anon_name: "Нами", city: "Шымкент", categories: ["Ведущий"], price_from_kzt: 600000 } },
 ];
 
-const MARKER_STYLES: Record<MarkerType, { label: string; color: string; symbol: string }> = {
-  venue: { label: "Площадки", color: "#047857", symbol: "◆" },
-  talent: { label: "Артисты и ведущие", color: "#7c3aed", symbol: "★" },
-  service: { label: "Услуги", color: "#0369a1", symbol: "✦" },
-};
+const CATEGORIES: { type: Category; label: string }[] = [
+  { type: "all", label: "Все" },
+  { type: "venue", label: "Площадки" },
+  { type: "talent", label: "Артисты" },
+  { type: "service", label: "Услуги" },
+];
 
-const priceFormatter = new Intl.NumberFormat("ru-KZ");
+const CITY_LABELS = [
+  { name: "Алматы", x: 75.3, y: 80, offsetX: 52, offsetY: 22 },
+  { name: "Астана", x: 62.3, y: 31.4, offsetX: 44, offsetY: 22 },
+  { name: "Шымкент", x: 58, y: 85.5, offsetX: 0, offsetY: 22 },
+  { name: "Караганда", x: 66.3, y: 39.4, offsetX: 36, offsetY: 25 },
+  { name: "Актобе", x: 28.2, y: 36.3, offsetX: 0, offsetY: 22 },
+];
+
+const priceFormatter = new Intl.NumberFormat("ru-RU");
+
+function MapIcon({ type }: { type: MarkerType | "pin" | "navigation" | "close" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      {type === "venue" && <>
+        <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-2M10 6h4M10 10h4M10 14h4M10 22v-4h4v4" />
+      </>}
+      {type === "talent" && <>
+        <rect x="9" y="2" width="6" height="12" rx="3" />
+        <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" />
+      </>}
+      {type === "service" && <>
+        <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z" />
+        <circle cx="12" cy="14" r="3" />
+      </>}
+      {type === "pin" && <>
+        <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" />
+        <circle cx="12" cy="10" r="3" />
+      </>}
+      {type === "navigation" && <path d="m3 11 19-9-9 19-2-8-8-2Z" />}
+      {type === "close" && <path d="m6 6 12 12M18 6 6 18" />}
+    </svg>
+  );
+}
 
 export function KazakhstanMap({ className }: { className?: string }) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<Category>("all");
+  const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const markerButtons = useRef<Record<string, HTMLButtonElement | null>>({});
   const componentId = useId();
-  const titleId = `${componentId}-title`;
   const cardId = `${componentId}-card`;
-  const selectedMarker = DEMO_MARKERS.find((marker) => marker.id === selectedId);
+  const filteredMarkers = DEMO_MARKERS.filter((marker) => activeCategory === "all" || marker.type === activeCategory);
 
   function closeCard() {
-    if (selectedId) markerButtons.current[selectedId]?.focus();
-    setSelectedId(null);
+    if (selectedMarker) markerButtons.current[selectedMarker.id]?.focus();
+    setSelectedMarker(null);
   }
 
   return (
     <section
-      className={className}
-      aria-labelledby={titleId}
+      className={["kazakhstan-map", className].filter(Boolean).join(" ")}
+      aria-label="Подрядчики на карте Казахстана"
       onKeyDown={(event) => {
         if (event.key === "Escape" && selectedMarker) {
           event.stopPropagation();
           closeCard();
         }
       }}
-      style={{
-        width: "100%",
-        boxSizing: "border-box",
-        border: "1px solid #dbe7e3",
-        borderRadius: 24,
-        background: "#f8fbfa",
-        color: "#16382e",
-        fontFamily: "inherit",
-      }}
     >
-      <header style={{ padding: "24px 24px 0" }}>
-        <h2 id={titleId} style={{ margin: 0, fontSize: 22 }}>
-          Подрядчики на карте Казахстана
-        </h2>
-        <p style={{ margin: "8px 0 0", fontSize: 14, color: "#526c63" }}>
-          Выберите маркер, чтобы посмотреть имя и стоимость услуг.
-        </p>
-      </header>
-
-      <div
-        onClick={() => setSelectedId(null)}
-        style={{ position: "relative", width: "100%", aspectRatio: "5 / 3" }}
-      >
-        <svg
-          viewBox="0 0 1000 600"
-          aria-hidden="true"
-          focusable="false"
-          style={{ display: "block", width: "100%", height: "100%" }}
-        >
-          {/* A simplified, decorative outline; not a geographic boundary dataset. */}
-          <path
-            d="M 76 244 L 103 217 L 92 185 L 130 156 L 163 167
-               L 184 135 L 226 143 L 251 119 L 282 136 L 316 117
-               L 351 141 L 380 129 L 402 98 L 441 107 L 462 80
-               L 499 85 L 520 62 L 557 73 L 587 65 L 609 97
-               L 650 100 L 669 129 L 708 113 L 735 140 L 768 135
-               L 794 160 L 824 151 L 844 184 L 882 196 L 886 228
-               L 926 244 L 907 272 L 942 291 L 920 320 L 877 332
-               L 870 363 L 842 383 L 849 413 L 820 444 L 773 437
-               L 744 459 L 703 448 L 674 473 L 635 456 L 610 480
-               L 572 475 L 551 501 L 522 484 L 501 454 L 467 444
-               L 448 416 L 414 409 L 390 384 L 367 397 L 337 376
-               L 313 398 L 302 446 L 265 456 L 260 426 L 222 421
-               L 217 452 L 180 454 L 177 416 L 147 399 L 158 369
-               L 141 343 L 153 317 L 124 310 L 111 279 L 85 274 Z"
-            fill="#d9eee3"
-            stroke="#75a78f"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M 105 349 Q 125 364 116 390 Q 108 412 126 441
-               L 115 483 Q 73 476 66 442 Q 80 418 67 388 Q 74 359 105 349 Z"
-            fill="#dceef5"
-          />
-          <path
-            d="M 633 378 Q 670 383 705 370 L 724 375
-               Q 692 395 655 391 Z"
-            fill="#b6dbe8"
-          />
-          <text x="455" y="325" textAnchor="middle" fill="#456c5a" fontSize="22" letterSpacing="5">
-            ҚАЗАҚСТАН
-          </text>
-        </svg>
-
-        {DEMO_MARKERS.map((marker) => {
-          const markerStyle = MARKER_STYLES[marker.type];
-          const isSelected = selectedId === marker.id;
-
-          return (
-            <button
-              key={marker.id}
-              ref={(element) => { markerButtons.current[marker.id] = element; }}
-              type="button"
-              aria-label={`${marker.anon_name}, ${marker.city}, от ${priceFormatter.format(marker.price_from_kzt)} тенге`}
-              aria-expanded={isSelected}
-              aria-controls={isSelected ? cardId : undefined}
-              title={`${marker.anon_name} · ${marker.city}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                setSelectedId(isSelected ? null : marker.id);
-              }}
-              style={{
-                position: "absolute",
-                left: `${marker.x}%`,
-                top: `${marker.y}%`,
-                transform: "translate(-50%, -50%)",
-                width: 44,
-                height: 44,
-                padding: 0,
-                display: "grid",
-                placeItems: "center",
-                border: 0,
-                borderRadius: "50%",
-                background: "transparent",
-                cursor: "pointer",
-                zIndex: isSelected ? 2 : 1,
-              }}
-            >
-              <span
-                aria-hidden="true"
-                style={{
-                  display: "grid",
-                  placeItems: "center",
-                  width: isSelected ? 34 : 28,
-                  height: isSelected ? 34 : 28,
-                  borderRadius: "50%",
-                  border: "3px solid #fff",
-                  background: markerStyle.color,
-                  color: "#fff",
-                  fontSize: 16,
-                  boxShadow: isSelected
-                    ? `0 0 0 4px ${markerStyle.color}33, 0 3px 10px #16382e30`
-                    : "0 3px 10px #16382e30",
-                }}
-              >
-                {markerStyle.symbol}
-              </span>
-            </button>
-          );
-        })}
-
-        {selectedMarker && (
-          <div
-            id={cardId}
-            role="region"
-            aria-label="Информация о подрядчике"
-            aria-live="polite"
-            onClick={(event) => event.stopPropagation()}
-            style={{
-              position: "absolute",
-              bottom: 8,
-              left: 16,
-              zIndex: 3,
-              boxSizing: "border-box",
-              width: 270,
-              maxWidth: "calc(100% - 32px)",
-              padding: "16px 48px 16px 18px",
-              background: "#fff",
-              border: "1px solid #dbe7e3",
-              borderRadius: 16,
-              boxShadow: "0 12px 32px #16382e24",
+      <div className="kazakhstan-map__filters" role="group" aria-label="Категории на карте">
+        {CATEGORIES.map(({ type, label }) => (
+          <button
+            key={type}
+            type="button"
+            className={`kazakhstan-map__filter kazakhstan-map__filter--${type}`}
+            aria-pressed={activeCategory === type}
+            onClick={() => {
+              setActiveCategory(type);
+              if (type !== "all" && selectedMarker?.type !== type) setSelectedMarker(null);
             }}
           >
-            <button
-              type="button"
-              aria-label="Закрыть карточку"
-              onClick={closeCard}
-              style={{ position: "absolute", right: 2, top: 2, width: 44, height: 44, border: 0, borderRadius: 12, background: "transparent", color: "#526c63", fontSize: 24, cursor: "pointer" }}
-            >
-              ×
-            </button>
-            <p style={{ margin: "0 0 6px", color: "#526c63", fontSize: 12 }}>
-              {selectedMarker.city} · {MARKER_STYLES[selectedMarker.type].label}
-            </p>
-            <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>{selectedMarker.anon_name}</h3>
-            <p style={{ margin: 0, color: "#047857", fontWeight: 700, fontSize: 16 }}>
-              от {priceFormatter.format(selectedMarker.price_from_kzt)} ₸
-            </p>
-          </div>
-        )}
+            {type !== "all" && <MapIcon type={type} />}
+            {label}
+          </button>
+        ))}
       </div>
 
-      <footer style={{ padding: "8px 24px 20px" }}>
-        <ul aria-label="Типы подрядчиков" style={{ display: "flex", flexWrap: "wrap", gap: "12px 20px", padding: 0, margin: 0, listStyle: "none" }}>
-          {(Object.keys(MARKER_STYLES) as MarkerType[]).map((type) => (
-            <li key={type} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13 }}>
-              <span aria-hidden="true" style={{ color: MARKER_STYLES[type].color }}>{MARKER_STYLES[type].symbol}</span>
-              {MARKER_STYLES[type].label}
-            </li>
+      <div className="kazakhstan-map__viewport" tabIndex={0} role="group" aria-label="Интерактивная карта" aria-describedby={`${componentId}-hint`} onClick={() => setSelectedMarker(null)}>
+        <div className="kazakhstan-map__canvas">
+          <svg viewBox="0 0 1000 550" className="kazakhstan-map__drawing" aria-hidden="true" focusable="false">
+            <path
+              d="M 30.0 249.7 L 63.9 282.4 L 86.6 330.4 L 113.3 367.9 L 117.1 388.2 L 110.7 399.4 L 113.3 401.7 L 137.2 408.0 L 159.4 423.6 L 184.7 435.5 L 195.0 461.1 L 210.5 479.3 L 232.3 486.2 L 236.2 437.5 L 241.0 415.7 L 256.1 367.9 L 267.2 358.4 L 293.6 356.6 L 303.7 351.0 L 314.7 374.9 L 329.0 394.1 L 351.3 401.7 L 363.0 369.2 L 372.9 366.2 L 375.1 334.1 L 392.4 349.9 L 428.4 357.8 L 446.5 367.9 L 485.3 408.6 L 504.0 461.2 L 541.6 520.0 L 564.6 493.3 L 585.8 483.4 L 613.0 452.4 L 632.9 455.3 L 666.9 437.0 L 684.4 435.5 L 714.5 447.9 L 728.1 437.0 L 755.8 452.4 L 772.8 423.5 L 796.3 408.5 L 827.2 384.8 L 846.9 386.8 L 864.6 383.1 L 874.8 367.9 L 900.1 352.4 L 931.1 322.8 L 970.0 300.3 L 956.7 283.4 L 950.9 251.4 L 946.2 232.8 L 924.5 214.0 L 903.1 179.4 L 874.8 165.2 L 850.2 150.2 L 818.3 120.9 L 779.6 97.6 L 751.0 96.0 L 735.7 65.3 L 708.2 63.8 L 661.8 48.4 L 613.2 31.1 L 565.4 30.0 L 533.9 44.7 L 503.1 61.6 L 470.3 63.8 L 444.2 102.4 L 399.7 128.6 L 375.1 165.2 L 333.7 156.9 L 286.1 167.2 L 232.3 165.2 L 203.4 168.2 L 162.0 156.5 L 137.1 148.3 L 124.1 151.6 L 101.3 161.1 L 89.5 182.1 L 76.3 210.0 L 57.0 232.2 L 30.0 249.7 Z"
+              fill="#e2e8f0" stroke="#94a3b8" strokeWidth="2.5"
+            />
+          </svg>
+
+          {CITY_LABELS.map((city) => (
+            <span key={city.name} className="kazakhstan-map__city" style={{ left: `calc(${city.x}% + ${city.offsetX}px)`, top: `calc(${city.y}% + ${city.offsetY}px)` }}>{city.name}</span>
           ))}
-        </ul>
-        <p style={{ margin: "12px 0 0", color: "#526c63", fontSize: 12 }}>
-          Схематичная карта · 6 демо-подрядчиков · Цены указаны для примера
-        </p>
-      </footer>
+
+          {filteredMarkers.map((marker) => {
+            const isSelected = selectedMarker?.id === marker.id;
+            return (
+              <button
+                key={marker.id}
+                ref={(element) => { markerButtons.current[marker.id] = element; }}
+                type="button"
+                className={`kazakhstan-map__marker kazakhstan-map__marker--${marker.type}`}
+                style={{ left: `calc(${marker.x}% + ${marker.offsetX ?? 0}px)`, top: `calc(${marker.y}% + ${marker.offsetY ?? 0}px)` } as CSSProperties}
+                aria-label={`${marker.contractor.anon_name}, ${marker.contractor.city}, от ${priceFormatter.format(marker.contractor.price_from_kzt)} тенге`}
+                aria-expanded={isSelected}
+                aria-controls={isSelected ? cardId : undefined}
+                title={`${marker.contractor.anon_name} · ${marker.contractor.city}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedMarker(isSelected ? null : marker);
+                }}
+              >
+                <span className="kazakhstan-map__marker-disc"><MapIcon type={marker.type} /></span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <p className="kazakhstan-map__sr-only" id={`${componentId}-hint`}>Демонстрационные маркеры. Нажмите для просмотра. На узком экране прокрутите карту по горизонтали.</p>
+      {selectedMarker ? (
+        <div id={cardId} className="kazakhstan-map__card" role="region" aria-label="Информация о подрядчике" aria-live="polite">
+          <div className="kazakhstan-map__card-meta">
+            <span className="kazakhstan-map__category">{selectedMarker.contractor.categories[0]}</span>
+            <span className="kazakhstan-map__location"><MapIcon type="pin" />{selectedMarker.contractor.city}</span>
+          </div>
+          <h3>{selectedMarker.contractor.anon_name}</h3>
+          <p className="kazakhstan-map__price">От {priceFormatter.format(selectedMarker.contractor.price_from_kzt)} ₸</p>
+          <button className="kazakhstan-map__close" type="button" aria-label="Закрыть карточку" onClick={closeCard}><MapIcon type="close" /></button>
+        </div>
+      ) : (
+        <p className="kazakhstan-map__hint"><MapIcon type="navigation" /><span>Нажмите на маркер для просмотра</span></p>
+      )}
     </section>
   );
 }
