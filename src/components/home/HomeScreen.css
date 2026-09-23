@@ -60,7 +60,13 @@
 .home-filter-summary p { margin: 10px 0 6px; }
 .home-filter-summary ul { margin: 6px 0; padding-left: 20px; }
 .home-result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
-.home-result-card { min-width: 0; padding: 22px; border: 1px solid #dbe7e3; border-radius: 16px; background: #fff; }
+.home-result-card { position: relative; min-width: 0; padding: 22px; border: 1px solid #dbe7e3; border-radius: 16px; background: #fff; transition: border-color 160ms ease, box-shadow 160ms ease; }
+.home-result-card:hover, .home-result-card--selected { border-color: #68a58d; box-shadow: 0 6px 20px #16382e0d; }
+.home-card-details-button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; margin-top: 18px; padding: 0; border: 0; background: transparent; color: #047857; font: inherit; font-size: 13px; font-weight: 700; text-align: left; cursor: pointer; }
+.home-card-details-button::after { position: absolute; inset: 0; border-radius: 16px; content: ""; }
+.home-result-card .home-card-details-button:hover { filter: none; }
+.home-card-details-button:focus-visible { outline: none; }
+.home-card-details-button:focus-visible::after { outline: 3px solid #08916a; outline-offset: 3px; }
 .home-contractor-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
 .home-contractor-badges span { padding: 4px 8px; border-radius: 5px; font-size: 11px; line-height: 1.5; }
 .home-synthetic-badge { color: #6b4694; background: #f3edf9; }
@@ -79,4 +85,8 @@
   .home-search { padding: 18px; }
   .home-search-button { justify-content: space-between; width: 100%; }
   .home-example-buttons { display: grid; grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-result-card { transition: none; }
 }

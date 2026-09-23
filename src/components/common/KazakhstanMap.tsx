@@ -69,7 +69,13 @@ function MapIcon({ type }: { type: MarkerType | "pin" | "navigation" | "close" }
   );
 }
 
-export function KazakhstanMap({ className }: { className?: string }) {
+export function KazakhstanMap({ className, onOpenDetails }: {
+  className?: string;
+  onOpenDetails?: (
+    contractor: Pick<Contractor, "anon_name" | "city" | "categories" | "price_from_kzt">,
+    trigger: HTMLButtonElement,
+  ) => void;
+}) {
   const [activeCategory, setActiveCategory] = useState<Category>("all");
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const markerButtons = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -158,6 +164,16 @@ export function KazakhstanMap({ className }: { className?: string }) {
           </div>
           <h3>{selectedMarker.contractor.anon_name}</h3>
           <p className="kazakhstan-map__price">От {priceFormatter.format(selectedMarker.contractor.price_from_kzt)} ₸</p>
+          {onOpenDetails && (
+            <button
+              className="kazakhstan-map__details"
+              type="button"
+              aria-label={`Подробнее о подрядчике ${selectedMarker.contractor.anon_name}`}
+              onClick={(event) => onOpenDetails(selectedMarker.contractor, event.currentTarget)}
+            >
+              Подробнее о подрядчике <span aria-hidden="true">→</span>
+            </button>
+          )}
           <button className="kazakhstan-map__close" type="button" aria-label="Закрыть карточку" onClick={closeCard}><MapIcon type="close" /></button>
         </div>
       ) : (

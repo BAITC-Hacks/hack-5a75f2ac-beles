@@ -2,7 +2,10 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { MatchResponse } from "../../types";
 import catalog from "../../data/catalog-options.json";
+import contractors from "../../../data/contractors.json";
 import KazakhstanMap from "../common/KazakhstanMap";
+import ContractorDetails from "../common/ContractorDetails";
+import type { ContractorSelection } from "../common/ContractorDetails";
 import "./HomeScreen.css";
 
 const priceFormatter = new Intl.NumberFormat("ru-KZ");
@@ -73,11 +76,15 @@ export function HomeScreen() {
   const [result, setResult] = useState<MatchResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchBudget, setSearchBudget] = useState(0);
+  const [searchDate, setSearchDate] = useState("");
+  const [selectedProfile, setSelectedProfile] = useState<ContractorSelection | null>(null);
   const resultsRef = useRef<HTMLElement>(null);
   const cityRef = useRef<HTMLSelectElement>(null);
+  const detailsTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const profileId = `${componentId}-contractor-profile`;
 
   useEffect(() => {
-    if (!result || isSearching) return;
+    if (!result || isSearching || detailsTriggerRef.current) return;
     resultsRef.current?.focus({ preventScroll: true });
     resultsRef.current?.scrollIntoView({ behavior: "auto", block: "start" });
   }, [result, isSearching]);
@@ -89,7 +96,22 @@ export function HomeScreen() {
   function applyExample(values: typeof EXAMPLES[number]["values"]) {
     setForm({ ...EMPTY_FORM, ...values });
     setResult(null);
+    setSelectedProfile(null);
+    detailsTriggerRef.current = null;
     cityRef.current?.focus();
+  }
+
+  function openProfile(selection: ContractorSelection, trigger: HTMLButtonElement) {
+    detailsTriggerRef.current = trigger;
+    setSelectedProfile(selection);
+  }
+
+  function backToCard() {
+    const target = detailsTriggerRef.current?.isConnected ? detailsTriggerRef.current : resultsRef.current;
+    setSelectedProfile(null);
+    detailsTriggerRef.current = null;
+    target?.focus({ preventScroll: true });
+    target?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
   }
 
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
@@ -98,6 +120,9 @@ export function HomeScreen() {
     setIsSearching(true);
     setResult(null);
     setSearchBudget(Number(form.budget));
+    setSearchDate(form.date);
+    setSelectedProfile(null);
+    detailsTriggerRef.current = null;
 
     try {
       const response = await fetch("/api/match", {
@@ -228,7 +253,14 @@ export function HomeScreen() {
         </fieldset>
       </form>
 
-      <KazakhstanMap />
+      <KazakhstanMap onOpenDetails={(preview, trigger) => {
+        const contractor = contractors.find((profile) => profile.anon_name === preview.anon_name && profile.city === preview.city);
+        openProfile({
+          contractor: contractor ?? { ...preview, id: `demo-${preview.city}-${preview.anon_name}` },
+          source: contractor ? "catalog" : "demo",
+          date: form.date || undefined,
+        }, trigger);
+      }} />
 
       <section ref={resultsRef} tabIndex={-1} className="home-results" aria-labelledby={`${componentId}-results`} aria-busy={isSearching}>
         <div role="status" aria-live="polite" aria-atomic="true">
@@ -267,7 +299,7 @@ export function HomeScreen() {
         {result && result.matches.length > 0 && (
           <div className="home-result-grid">
             {result.matches.map(({ contractor, explanation }) => (
-              <article key={contractor.id} className="home-result-card">
+              <article key={contractor.id} className={`home-result-card${selectedProfile?.contractor.id === contractor.id ? " home-result-card--selected" : ""}`}>
                 <div className="home-contractor-badges">
                   {contractor.synthetic && <span className="home-synthetic-badge">Синтетическая запись</span>}
                   <span className="home-city-badge">{contractor.city}</span>
@@ -287,11 +319,29 @@ export function HomeScreen() {
                   <p className="home-explanation-label">{result.explanation_source === "openai" ? "Объяснение ИИ" : "По данным каталога"}</p>
                   <p>{explanation}</p>
                 </div>
+                <button
+                  className="home-card-details-button"
+                  type="button"
+                  aria-label={`Подробнее о подрядчике ${contractor.anon_name}`}
+                  aria-expanded={selectedProfile?.contractor.id === contractor.id}
+                  aria-controls={selectedProfile?.contractor.id === contractor.id ? profileId : undefined}
+                  onClick={(event) => openProfile({
+                    contractor,
+                    source: "catalog",
+                    date: searchDate,
+                    explanation,
+                    explanationSource: result.explanation_source,
+                  }, event.currentTarget)}
+                >
+                  Подробнее о подрядчике <span aria-hidden="true">↓</span>
+                </button>
               </article>
             ))}
           </div>
         )}
       </section>
+
+      {selectedProfile && <ContractorDetails selection={selectedProfile} onBack={backToCard} targetId={profileId} />}
     </main>
   );
 }
