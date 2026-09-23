@@ -33,8 +33,8 @@ const EXAMPLES = [
   },
   {
     label: "Все заняты",
-    detail: "Флорист · 25 сентября",
-    values: { city: "Алматы", date: "2026-09-25", category: "Флорист", format: "свадьба", budget: "300000", language: "русский" },
+    detail: "Флорист · 25 декабря",
+    values: { city: "Алматы", date: "2026-12-25", category: "Флорист", format: "свадьба", budget: "300000", language: "русский" },
   },
   {
     label: "Нет категории",

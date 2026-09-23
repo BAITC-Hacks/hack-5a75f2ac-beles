@@ -335,6 +335,32 @@ test("the complete anonymized dataset preserves profiles, nullable hours and sou
   assert.equal(app.calls.length, 1);
 });
 
+test("late December refusals follow actual florist calendars instead of blocking the whole week", async (t) => {
+  const data = JSON.parse(await readFile(new URL("../data/contractors.json", import.meta.url), "utf8")) as Contractor[];
+  const app = await fixture(t, data);
+  const query = { city: "Алматы", category: "Флорист", budget: 300000, format: "свадьба", language: "русский" };
+
+  for (const date of ["2026-12-25", "2026-12-27", "2026-12-30"]) {
+    const result = await app.search({ ...query, date });
+    assert.equal(result.status, 200);
+    assert.equal(result.data.status, "no_match");
+    assert.deepEqual(result.data.matches, []);
+    assert.deepEqual(result.data.summary, {
+      total_in_category: 2, eligible: 0,
+      excluded: { busy: 2, budget: 0, format: 0, language: 0, duration: 0 },
+    });
+    assert.match(result.data.message, /заняты на дату — 2/u);
+    assert.equal(app.calls.length, 0);
+  }
+
+  const available = await app.search({ ...query, date: "2026-12-29" });
+  assert.equal(available.status, 200);
+  assert.equal(available.data.status, "matched");
+  assert.equal(available.data.summary?.eligible, 2);
+  assert.deepEqual(new Set(available.data.matches.map((item) => item.contractor.id)), new Set(["HK-39372", "HK-90001"]));
+  assert.equal(app.calls.length, 1);
+});
+
 test("actual busy calendars change the candidate pool on the next date without relaxing constraints", async (t) => {
   const data = JSON.parse(await readFile(new URL("../data/contractors.json", import.meta.url), "utf8")) as Contractor[];
   const app = await fixture(t, data);
