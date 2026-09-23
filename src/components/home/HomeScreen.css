@@ -1,0 +1,142 @@
+.home-screen { box-sizing:border-box; display:grid; gap:36px; width:calc(100% - 48px); max-width:1160px; margin:0 auto; padding:0 0 56px; color:#e7f3ff; }
+.home-icon { display:block; flex-shrink:0; width:20px; height:20px; }
+.home-nav { display:flex; align-items:center; justify-content:space-between; gap:24px; min-height:84px; margin-bottom:-20px; }
+.home-brand { display:inline-flex; align-items:center; gap:10px; color:#d9efff; font-size:15px; font-weight:750; letter-spacing:1px; text-decoration:none; }
+.home-brand-mark { display:block; flex-shrink:0; width:39px; height:39px; object-fit:contain; image-rendering:pixelated; }
+.home-brand-ai { font-weight:400; color:#8daecb; letter-spacing:0; }
+.home-nav-links { display:flex; align-items:center; gap:30px; }
+.home-nav-links a { padding:10px 0; color:#b5cfe5; font-size:13px; font-weight:600; text-decoration:none; }
+.home-nav-links a:hover { color:#54cfff; }
+.home-nav-location { display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border:1px solid #30506c; border-radius:24px; background:#0a1e33; color:#b5cfe5; font-size:12px; }
+.home-nav-location svg { width:14px; height:14px; }
+.home-search { position:relative; z-index:2; margin:0 8px; padding:28px; border:1px solid #cbddec; border-radius:28px; background:#f8fbff; color:#18304b; box-shadow:0 14px 35px #02101f33; scroll-margin-top:24px; }
+.home-search-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; }
+.home-section-eyebrow { margin:0 0 8px; color:#8fb8d8; font-size:10px; font-weight:650; letter-spacing:1.2px; text-transform:uppercase; }
+.home-search .home-section-eyebrow { color:#52748e; }
+.home-search h1,.home-section-heading h2 { margin:0; font-size:24px; font-weight:550; letter-spacing:-.65px; line-height:1.3; }
+.home-search-note { color:#59738b; font-size:11px; line-height:1.7; text-align:right; }
+.home-search fieldset { min-width:0; margin:0; padding:0; border:0; }
+.home-fields { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; }
+.home-fields label { display:grid; min-width:0; gap:8px; color:#405f7b; font-size:11px; font-weight:600; }
+.home-fields input,.home-fields select { box-sizing:border-box; width:100%; min-width:0; min-height:46px; padding:11px 10px; border:1px solid #cbddec; border-radius:12px; background:#f8fbff; color:#183c5d; font:inherit; font-size:12px; font-weight:400; }
+.home-fields input::placeholder { color:#71879c; }
+.home-fields select { cursor:pointer; }
+.home-form-hints { display:flex; flex-wrap:wrap; gap:5px 20px; margin-top:12px; color:#536f88; font-size:10px; line-height:1.7; }
+.home-extra-filters { margin-top:20px; font-size:12px; color:#466680; }
+.home-extra-filters summary,.home-filter-summary summary { width:fit-content; cursor:pointer; }
+.home-extra-filters summary:focus-visible,.home-filter-summary summary:focus-visible { outline:3px solid #009bda; outline-offset:4px; border-radius:4px; }
+.home-fields-optional { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:460px; margin-top:16px; }
+.home-search-button { display:inline-flex; align-items:center; justify-content:center; gap:12px; min-height:48px; margin-top:20px; padding:12px 24px; border:0; border-radius:15px; background:#007db8; color:#f8fbff; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:background 150ms ease; }
+.home-search-button:hover { background:#00689a; }
+.home-search-button span { margin-left:20px; font-size:19px; }
+.home-search-button svg { width:17px; height:17px; }
+.home-search-button:disabled { opacity:.65; cursor:wait; }
+.home-examples,.home-results,.home-map-section { min-width:0; padding:0 8px; }
+.home-section-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.home-section-heading > span { color:#a2bdd4; font-size:11px; }
+.home-examples h2 { font-size:19px; letter-spacing:-.4px; }
+.home-example-buttons { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-top:16px; }
+.home-example-buttons button { display:flex; align-items:center; gap:10px; min-width:0; min-height:76px; padding:14px; border:1px solid #cbddec; border-radius:19px; background:#f8fbff; color:#20435f; font:inherit; text-align:left; cursor:pointer; transition:background 150ms ease,border-color 150ms ease; }
+.home-example-buttons button:hover { border-color:#82b9dc; background:#eaf5ff; }
+.home-example-icon { display:grid; flex-shrink:0; place-items:center; width:34px; height:34px; border:1px solid #d4e5f2; border-radius:50%; background:#ecf5fc; color:#4b7697; }
+.home-example-icon svg { width:16px; height:16px; }
+.home-example-copy { display:grid; gap:4px; min-width:0; }
+.home-example-copy strong { font-size:11px; font-weight:600; line-height:1.5; }
+.home-example-copy > span { color:#55738c; font-size:10px; line-height:1.5; }
+.home-example-arrow { margin-left:auto; color:#557da0; font-size:16px; }
+.home-example-buttons button:disabled { opacity:.6; cursor:wait; }
+.home-results { scroll-margin-top:24px; border-radius:24px; }
+.home-results:focus { outline:none; }
+.home-results:focus-visible { outline:3px solid #009bda; outline-offset:8px; }
+.home-muted { margin:12px 0 22px; color:#b1c9dd; font-size:12px; line-height:1.8; }
+.home-catalog-count { padding:7px 10px; border-radius:24px; background:#e7f4ff; white-space:nowrap; }
+.home-section-heading > .home-catalog-count { color:#356184; }
+.home-message { display:flex; align-items:flex-start; gap:12px; margin:18px 0; padding:18px; border:1px solid; border-radius:18px; }
+.home-message svg { flex-shrink:0; margin-top:2px; }
+.home-message p { margin:0; font-size:13px; line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere; }
+.home-message-warning { border-color:#e5cd88; background:#fff6d9; color:#705321; }
+.home-message-info { border-color:#b3d7ef; background:#eaf6ff; color:#235e88; }
+.home-filter-summary { margin:16px 0 20px; color:#b4cde2; font-size:12px; line-height:1.8; }
+.home-filter-summary p { margin:10px 0 6px; }
+.home-filter-summary ul { margin:6px 0; padding-left:20px; }
+.home-result-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+.home-result-card { position:relative; display:flex; flex-direction:column; min-width:0; padding:8px; border:1px solid #cbddec; border-radius:27px; background:#f8fbff; transition:border-color 160ms ease,box-shadow 160ms ease; }
+.home-result-card:hover,.home-result-card--selected { border-color:#41b6ed; box-shadow:0 10px 28px #008cda22; }
+.home-card-cover { position:relative; flex-shrink:0; aspect-ratio:3/2; overflow:hidden; border-radius:21px; background:#d4e8fa; }
+.home-card-cover img { display:block; width:100%; height:100%; object-fit:cover; }
+.home-card-cover-category,.home-card-image-label { position:absolute; z-index:1; border:1px solid #ffffff80; background:#f8fbfff2; color:#183e60; line-height:1.5; }
+.home-card-cover-category { left:12px; bottom:12px; max-width:calc(100% - 48px); padding:6px 11px; border-radius:20px; font-size:11px; }
+.home-card-image-label { top:12px; right:12px; padding:4px 8px; border-radius:7px; font-size:9px; }
+.home-card-content { display:flex; flex:1; flex-direction:column; padding:18px 13px 12px; }
+.home-contractor-badges { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:11px; }
+.home-contractor-badges span { font-size:10px; line-height:1.5; }
+.home-city-badge { display:inline-flex; align-items:center; gap:4px; color:#55748e; }
+.home-city-badge svg { width:12px; height:12px; }
+.home-synthetic-badge { padding:3px 7px; border-radius:7px; background:#f0e9d5; color:#746542; }
+.home-result-card h3 { margin:0 0 5px; color:#183e60; font-size:19px; font-weight:600; line-height:1.4; letter-spacing:-.3px; overflow-wrap:anywhere; }
+.home-contractor-category { min-height:18px; margin:0; color:#526e87; font-size:11px; line-height:1.7; }
+.home-contractor-price { margin:16px 0; color:#007db8; font-size:22px; font-weight:650; letter-spacing:-.5px; }
+.home-contractor-price > span { color:#526e87; font-size:11px; font-weight:400; letter-spacing:0; }
+.home-budget-note { margin:-4px 0 16px; color:#775d27; font-size:11px; line-height:1.7; }
+.home-imputed-note { margin:-5px 0 16px; color:#536f88; font-size:10px; line-height:1.7; }
+.home-card-formats { margin:0 0 16px; color:#536f88; font-size:11px; line-height:1.8; }
+.home-explanation { padding:14px 0 18px; border-top:1px solid #e0ebf4; }
+.home-explanation p { margin:0; color:#466782; font-size:12px; line-height:1.85; white-space:pre-wrap; overflow-wrap:anywhere; }
+.home-explanation .home-explanation-label { display:flex; align-items:center; gap:6px; margin-bottom:8px; color:#007db8; font-size:10px; font-weight:650; }
+.home-explanation-label svg { width:12px; height:12px; }
+.home-card-details-button { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; margin-top:auto; padding:12px 0 0; border:0; border-top:1px solid #e0ebf4; background:transparent; color:#007db8; font:inherit; font-size:11px; font-weight:600; text-align:left; cursor:pointer; }
+.home-card-details-button > span { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:#e7f4ff; font-size:17px; }
+.home-card-details-button::after { position:absolute; inset:0; z-index:2; border-radius:27px; content:""; }
+.home-result-card .home-card-details-button:hover { filter:none; }
+.home-card-details-button:focus-visible { outline:none; }
+.home-card-details-button:focus-visible::after { outline:3px solid #009bda; outline-offset:3px; }
+.home-map-section { padding-top:30px; border-top:1px solid #30506c; scroll-margin-top:24px; }
+.home-map-label { display:inline-flex; align-items:center; gap:6px; }
+.home-map-label svg { width:14px; height:14px; }
+@media (max-width:1000px) {
+  .home-fields { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .home-example-buttons { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .home-result-grid { gap:14px; }
+  .home-contractor-price { font-size:20px; }
+}
+@media (max-width:760px) {
+  .home-screen { width:calc(100% - 32px); gap:28px; }
+  .home-nav { gap:12px; min-height:76px; }
+  .home-nav-links { gap:16px; }
+  .home-nav-location { display:none; }
+  .home-search { margin:0 8px; padding:24px; }
+  .home-result-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .home-result-card:last-child:nth-child(odd) { grid-column:1/-1; }
+  .home-section-heading > span { max-width:160px; text-align:right; }
+  .home-section-heading h2 { font-size:23px; }
+  .home-examples h2 { font-size:18px; }
+  .home-fields-optional { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:520px) {
+  .home-screen { width:calc(100% - 24px); padding-bottom:32px; }
+  .home-nav { flex-wrap:wrap; justify-content:center; gap:12px; padding:18px 4px 12px; }
+  .home-brand { margin-right:auto; font-size:13px; }
+  .home-brand-mark { width:34px; height:34px; }
+  .home-nav-links { gap:13px; }
+  .home-nav-links a { font-size:11px; }
+  .home-search { margin:0 6px; padding:20px 16px; border-radius:24px; }
+  .home-search-heading { align-items:flex-start; }
+  .home-search-note { display:none; }
+  .home-fields { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 10px; }
+  .home-fields > label:last-child:nth-child(odd) { grid-column:1/-1; }
+  .home-fields input,.home-fields select { font-size:13px; }
+  .home-search-button { justify-content:space-between; width:100%; padding-right:18px; padding-left:18px; }
+  .home-search-button span { margin-left:0; }
+  .home-section-heading { align-items:flex-start; flex-wrap:wrap; gap:8px; }
+  .home-section-heading > span { max-width:none; text-align:left; }
+  .home-example-buttons { grid-template-columns:1fr; gap:8px; }
+  .home-example-buttons button { min-height:66px; }
+  .home-example-copy strong { font-size:12px; }
+  .home-example-copy > span { font-size:11px; }
+  .home-result-grid { grid-template-columns:1fr; gap:18px; }
+  .home-card-content { padding:18px 16px 14px; }
+  .home-result-card h3 { font-size:21px; }
+  .home-contractor-price { font-size:23px; }
+  .home-card-details-button { font-size:12px; }
+}
+@media (prefers-reduced-motion:reduce) { .home-result-card,.home-search-button,.home-example-buttons button { transition:none; } }

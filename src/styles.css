@@ -1,0 +1,24 @@
+:root {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: #e7f3ff;
+  background: #071526;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-width: 320px;
+  background-color: #071526;
+  background-image: url("./assets/blue-pixels.svg"), linear-gradient(#5dbdff08 1px, transparent 1px), linear-gradient(90deg, #5dbdff08 1px, transparent 1px);
+  background-size: 512px 512px, 32px 32px, 32px 32px;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
+  outline: 3px solid #00aeef;
+  outline-offset: 3px;
+}
+input:disabled, select:disabled { opacity: 0.65; }
+::selection { background: #8bdcff; color: #092b4c; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
