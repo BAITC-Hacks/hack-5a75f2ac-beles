@@ -264,7 +264,7 @@ export function createMatchServer(options: ServerOptions = {}) {
         let content: Buffer;
         try { content = await readFile(file); }
         catch { throw new HttpError(404, "Страница не найдена. Сначала выполните сборку приложения."); }
-        const types: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml" };
+        const types: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png" };
         response.writeHead(200, {
           "Content-Type": types[extname(file.pathname)] ?? "application/octet-stream",
           "X-Content-Type-Options": "nosniff",

@@ -1,11 +1,12 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import type { MatchResponse } from "../../types";
+import type { Contractor, MatchResponse } from "../../types";
 import catalog from "../../data/catalog-options.json";
 import contractors from "../../../data/contractors.json";
 import KazakhstanMap from "../common/KazakhstanMap";
 import ContractorDetails from "../common/ContractorDetails";
 import type { ContractorSelection } from "../common/ContractorDetails";
+import eventAtmosphere from "../../assets/event-atmosphere.png";
 import "./HomeScreen.css";
 
 const priceFormatter = new Intl.NumberFormat("ru-KZ");
@@ -54,6 +55,30 @@ const EXCLUSION_LABELS = {
   duration: "не подходят по длительности",
 };
 
+const COLLECTIONS = [
+  { id: "all", label: "Все", category: "", categories: [] as string[] },
+  { id: "venue", label: "Площадки", category: "Банкетный зал", categories: ["Банкетный зал", "Загородная площадка", "Ресторан", "Отель"] },
+  { id: "talent", label: "Ведущие", category: "Ведущий", categories: ["Ведущий", "Ведущий церемонии"] },
+  { id: "service", label: "Услуги", category: "Флорист", categories: ["Флорист", "Декоратор", "Фотограф", "Видеограф"] },
+];
+const FEATURED_IDS = ["HK-64395", "HK-44733", "HK-39372"];
+
+function UiIcon({ name }: { name: string }) {
+  return <svg className="home-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+    {name === "all" && <><rect x="3" y="3" width="7" height="7" rx="2" /><rect x="14" y="3" width="7" height="7" rx="2" /><rect x="3" y="14" width="7" height="7" rx="2" /><rect x="14" y="14" width="7" height="7" rx="2" /></>}
+    {name === "venue" && <path d="M4 21V8l8-5 8 5v13M2 21h20M9 21v-6h6v6M8 9h1m6 0h1M8 12h1m6 0h1" />}
+    {name === "talent" && <><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" /></>}
+    {name === "service" && <><path d="M12 5c-5-7-11 3-4 5-8 3-1 12 4 5 5 7 12-2 4-5 7-2 1-12-4-5Z" /><circle cx="12" cy="10" r="2" /><path d="M12 17v5m0-2 5-2" /></>}
+    {name === "pin" && <><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>}
+    {name === "search" && <><circle cx="10.5" cy="10.5" r="7" /><path d="m16 16 5 5" /></>}
+    {name === "spark" && <path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z" />}
+  </svg>;
+}
+
+function contractorKind(contractor: Contractor) {
+  return COLLECTIONS.slice(1).find((collection) => collection.categories.some((category) => contractor.categories.includes(category)))?.id ?? "service";
+}
+
 function MessageIcon({ warning }: { warning: boolean }) {
   return (
     <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -78,9 +103,11 @@ export function HomeScreen() {
   const [searchBudget, setSearchBudget] = useState(0);
   const [searchDate, setSearchDate] = useState("");
   const [selectedProfile, setSelectedProfile] = useState<ContractorSelection | null>(null);
+  const [collectionId, setCollectionId] = useState("all");
   const resultsRef = useRef<HTMLElement>(null);
   const cityRef = useRef<HTMLSelectElement>(null);
   const detailsTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const returnTargetRef = useRef<HTMLElement | null>(null);
   const profileId = `${componentId}-contractor-profile`;
 
   useEffect(() => {
@@ -89,12 +116,24 @@ export function HomeScreen() {
     resultsRef.current?.scrollIntoView({ behavior: "auto", block: "start" });
   }, [result, isSearching]);
 
+  useEffect(() => {
+    if (selectedProfile || !returnTargetRef.current) return;
+    const target = returnTargetRef.current.isConnected ? returnTargetRef.current : resultsRef.current;
+    returnTargetRef.current = null;
+    target?.focus({ preventScroll: true });
+    target?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+  }, [selectedProfile]);
+
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
+    if (field === "category") {
+      setCollectionId(COLLECTIONS.find((collection) => collection.categories.includes(value))?.id ?? "all");
+    }
   }
 
   function applyExample(values: typeof EXAMPLES[number]["values"]) {
     setForm({ ...EMPTY_FORM, ...values });
+    setCollectionId(COLLECTIONS.find((collection) => collection.categories.includes(values.category))?.id ?? "all");
     setResult(null);
     setSelectedProfile(null);
     detailsTriggerRef.current = null;
@@ -102,16 +141,23 @@ export function HomeScreen() {
   }
 
   function openProfile(selection: ContractorSelection, trigger: HTMLButtonElement) {
+    returnTargetRef.current = null;
     detailsTriggerRef.current = trigger;
     setSelectedProfile(selection);
   }
 
   function backToCard() {
-    const target = detailsTriggerRef.current?.isConnected ? detailsTriggerRef.current : resultsRef.current;
+    returnTargetRef.current = detailsTriggerRef.current?.isConnected ? detailsTriggerRef.current : resultsRef.current;
     setSelectedProfile(null);
     detailsTriggerRef.current = null;
-    target?.focus({ preventScroll: true });
-    target?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+  }
+
+  function chooseCollection(collection: typeof COLLECTIONS[number]) {
+    setCollectionId(collection.id);
+    setForm((current) => ({ ...current, category: collection.category }));
+    setResult(null);
+    setSelectedProfile(null);
+    detailsTriggerRef.current = null;
   }
 
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
@@ -163,19 +209,72 @@ export function HomeScreen() {
 
   const isWarning = result?.status !== "matched";
   const excluded = result?.summary?.excluded;
+  const activeCollection = COLLECTIONS.find((collection) => collection.id === collectionId)!;
+  const previewContractors = collectionId === "all"
+    ? FEATURED_IDS.map((id) => contractors.find((contractor) => contractor.id === id)!).filter(Boolean)
+    : contractors.filter((contractor) => activeCollection.categories.some((category) => contractor.categories.includes(category))).slice(0, 3);
+
+  function renderCard(contractor: Contractor, explanation?: string, matched = false) {
+    const kind = contractorKind(contractor);
+    return <article key={contractor.id} className={`home-result-card${selectedProfile?.contractor.id === contractor.id ? " home-result-card--selected" : ""}`}>
+      <div className={`home-card-cover home-card-cover--${kind}`} aria-hidden="true">
+        <span className="home-card-cover-category">{contractor.categories[0]}</span>
+        <UiIcon name={kind} /><span className="home-card-cover-pattern" />
+      </div>
+      <div className="home-card-content">
+        <div className="home-contractor-badges">
+          <span className="home-city-badge"><UiIcon name="pin" />{contractor.city}</span>
+          {contractor.synthetic && <span className="home-synthetic-badge">Синтетическая запись</span>}
+        </div>
+        <h3>{contractor.anon_name}</h3>
+        <p className="home-contractor-category">{contractor.categories.join(" · ")}</p>
+        <p className="home-contractor-price"><span>от</span> {priceFormatter.format(contractor.price_from_kzt)} ₸</p>
+        {matched && contractor.price_from_kzt > searchBudget && <p className="home-budget-note">Выше бюджета на {priceFormatter.format(contractor.price_from_kzt - searchBudget)} ₸, в пределах допуска 10%.</p>}
+        {(contractor.price_imputed || contractor.city_imputed) && <p className="home-imputed-note">
+          {contractor.price_imputed && contractor.city_imputed ? "Цена и город заполнены при подготовке датасета." : contractor.price_imputed ? "Цена заполнена при подготовке датасета." : "Город заполнен при подготовке датасета."}
+        </p>}
+        {explanation ? <div className="home-explanation">
+          <p className="home-explanation-label"><UiIcon name="spark" />{result?.explanation_source === "openai" ? "Объяснение ИИ" : "По данным каталога"}</p>
+          <p>{explanation}</p>
+        </div> : <p className="home-card-formats">{contractor.event_formats.slice(0, 3).join(" · ")}</p>}
+        <button className="home-card-details-button" type="button"
+          aria-label={`Подробнее о подрядчике ${contractor.anon_name}`}
+          aria-expanded={selectedProfile?.contractor.id === contractor.id}
+          aria-controls={selectedProfile?.contractor.id === contractor.id ? profileId : undefined}
+          onClick={(event) => openProfile({ contractor, source: "catalog", date: matched ? searchDate : form.date || undefined, explanation, explanationSource: matched ? result?.explanation_source : undefined }, event.currentTarget)}>
+          Подробнее о подрядчике <span aria-hidden="true">↗</span>
+        </button>
+      </div>
+    </article>;
+  }
 
   return (
-    <main className="home-screen">
+    <main className="home-screen" id="top">
+      <nav className="home-nav" aria-label="Навигация по странице">
+        <a href="#top" className="home-brand" aria-label="HACKALEM AI — наверх"><span className="home-brand-mark">h<span>↗</span></span><span>HACKALEM<span className="home-brand-ai"> AI</span></span></a>
+        <div className="home-nav-links"><a href="#search">Подбор</a><a href="#catalog">Каталог</a><a href="#map">Карта</a></div>
+        <span className="home-nav-location"><UiIcon name="pin" />Казахстан</span>
+      </nav>
       <header className="home-header">
-        <p className="home-eyebrow">HACKALEM AI</p>
-        <h1>Найдите подрядчика для события</h1>
-        <p>Укажите детали — подберём до трёх вариантов и объясним, почему они вам подходят.</p>
-        <p className="home-catalog-note">
-          {catalog.total} подрядчиков · {catalog.categories.length} категорий · Анонимизированный каталог хакатона
-        </p>
+        <div className="home-hero-copy">
+          <p className="home-eyebrow"><span />Для ваших особенных событий</p>
+          <h1>Ваше событие.<br /><em>Ваша команда.</em></h1>
+          <p className="home-hero-description">От первого «а что, если» до последнего танца.<br className="home-desktop-break" /> Найдите людей и места, с которыми всё сложится.</p>
+          <div className="home-collections" role="group" aria-label="Категории подрядчиков">
+            {COLLECTIONS.map((collection) => <button key={collection.id} type="button" aria-pressed={collectionId === collection.id} disabled={isSearching} onClick={() => chooseCollection(collection)}><UiIcon name={collection.id} />{collection.label}</button>)}
+          </div>
+          <p className="home-catalog-note">{catalog.total} профилей <span>·</span> {catalog.categories.length} категорий <span>·</span> Казахстан</p>
+        </div>
+        <div className="home-hero-visual">
+          <div className="home-hero-orbit" aria-hidden="true" />
+          <figure className="home-hero-image"><img src={eventAtmosphere} alt="Атмосфера события: светлый зал, цветы и праздничный стол" width="1086" height="1448" /><figcaption>Место для ваших воспоминаний</figcaption></figure>
+          <span className="home-hero-spark" aria-hidden="true"><UiIcon name="spark" /></span>
+          <div className="home-hero-note"><span><UiIcon name="spark" /></span><p>Хорошая команда.<br /><strong>Особенный день.</strong></p></div>
+        </div>
       </header>
 
-      <form className="home-search" onSubmit={handleSearch} aria-label="Поиск подрядчиков" aria-busy={isSearching}>
+      <form id="search" className="home-search" onSubmit={handleSearch} aria-label="Поиск подрядчиков" aria-busy={isSearching}>
+        <div className="home-search-heading"><div><p className="home-section-eyebrow">Начнём с главного</p><h2>Что вы планируете?</h2></div><span className="home-search-note">До 3 подходящих вариантов<br />с понятным объяснением</span></div>
         <fieldset disabled={isSearching}>
           <div className="home-fields">
             <label>
@@ -235,38 +334,29 @@ export function HomeScreen() {
           </details>
 
           <button className="home-search-button" type="submit" disabled={isSearching}>
+            <UiIcon name="search" />
             {isSearching ? "Подбираем…" : "Найти подрядчиков"}
             <span aria-hidden="true">{isSearching ? "…" : "→"}</span>
           </button>
-
-          <div className="home-examples" aria-label="Примеры поиска">
-            <p>Попробуйте пример</p>
-            <div className="home-example-buttons">
-              {EXAMPLES.map((example) => (
-                <button key={example.label} type="button" onClick={() => applyExample(example.values)}>
-                  <strong>{example.label}</strong>
-                  <span>{example.detail}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </fieldset>
       </form>
 
-      <KazakhstanMap onOpenDetails={(preview, trigger) => {
-        const contractor = contractors.find((profile) => profile.anon_name === preview.anon_name && profile.city === preview.city);
-        openProfile({
-          contractor: contractor ?? { ...preview, id: `demo-${preview.city}-${preview.anon_name}` },
-          source: contractor ? "catalog" : "demo",
-          date: form.date || undefined,
-        }, trigger);
-      }} />
+      <section className="home-examples" aria-label="Примеры поиска">
+        <div className="home-section-heading"><h2>Можно начать с идеи</h2><span>Заполните форму в один клик</span></div>
+        <div className="home-example-buttons">
+          {EXAMPLES.map((example, index) => <button key={example.label} type="button" disabled={isSearching} onClick={() => applyExample(example.values)}>
+            <span className="home-example-icon"><UiIcon name={index === 0 || index === 3 ? "talent" : "service"} /></span>
+            <span className="home-example-copy"><strong>{example.label}</strong><span>{example.detail}</span></span><span className="home-example-arrow" aria-hidden="true">↗</span>
+          </button>)}
+        </div>
+      </section>
 
-      <section ref={resultsRef} tabIndex={-1} className="home-results" aria-labelledby={`${componentId}-results`} aria-busy={isSearching}>
+      <section id="catalog" ref={resultsRef} tabIndex={-1} className="home-results" aria-labelledby={`${componentId}-results`} aria-busy={isSearching}>
         <div role="status" aria-live="polite" aria-atomic="true">
-          <h2 id={`${componentId}-results`}>{result ? RESULT_TITLES[result.status] : "Результаты подбора"}</h2>
+          <p className="home-section-eyebrow">{result ? "Результаты подбора" : "Знакомьтесь поближе"}</p>
+          <div className="home-section-heading"><h2 id={`${componentId}-results`}>{result ? RESULT_TITLES[result.status] : "Люди и места для ваших идей"}</h2>{!result && <span className="home-catalog-count">{catalog.total} профилей в каталоге</span>}</div>
           {isSearching && <p className="home-muted">Проверяем условия и подбираем подрядчиков…</p>}
-          {!isSearching && !result && <p className="home-muted">Заполните форму или выберите пример и нажмите «Найти подрядчиков».</p>}
+          {!isSearching && !result && <p className="home-muted">Несколько профилей из каталога. Для проверки бюджета и свободных дат воспользуйтесь подбором выше.</p>}
           {result?.status === "matched" && (
             <p className="home-muted">
               Показываем {result.matches.length} из {result.summary?.eligible ?? result.matches.length} подходящих вариантов.
@@ -298,50 +388,26 @@ export function HomeScreen() {
 
         {result && result.matches.length > 0 && (
           <div className="home-result-grid">
-            {result.matches.map(({ contractor, explanation }) => (
-              <article key={contractor.id} className={`home-result-card${selectedProfile?.contractor.id === contractor.id ? " home-result-card--selected" : ""}`}>
-                <div className="home-contractor-badges">
-                  {contractor.synthetic && <span className="home-synthetic-badge">Синтетическая запись</span>}
-                  <span className="home-city-badge">{contractor.city}</span>
-                </div>
-                <h3>{contractor.anon_name}</h3>
-                <p className="home-contractor-category">{contractor.categories.join(" · ")}</p>
-                <p className="home-contractor-price">от {priceFormatter.format(contractor.price_from_kzt)} ₸</p>
-                {contractor.price_from_kzt > searchBudget && (
-                  <p className="home-budget-note">Выше бюджета на {priceFormatter.format(contractor.price_from_kzt - searchBudget)} ₸, в пределах допуска 10%.</p>
-                )}
-                {(contractor.price_imputed || contractor.city_imputed) && (
-                  <p className="home-imputed-note">
-                    {contractor.price_imputed && contractor.city_imputed ? "Цена и город заполнены при подготовке датасета." : contractor.price_imputed ? "Цена заполнена при подготовке датасета." : "Город заполнен при подготовке датасета."}
-                  </p>
-                )}
-                <div className="home-explanation">
-                  <p className="home-explanation-label">{result.explanation_source === "openai" ? "Объяснение ИИ" : "По данным каталога"}</p>
-                  <p>{explanation}</p>
-                </div>
-                <button
-                  className="home-card-details-button"
-                  type="button"
-                  aria-label={`Подробнее о подрядчике ${contractor.anon_name}`}
-                  aria-expanded={selectedProfile?.contractor.id === contractor.id}
-                  aria-controls={selectedProfile?.contractor.id === contractor.id ? profileId : undefined}
-                  onClick={(event) => openProfile({
-                    contractor,
-                    source: "catalog",
-                    date: searchDate,
-                    explanation,
-                    explanationSource: result.explanation_source,
-                  }, event.currentTarget)}
-                >
-                  Подробнее о подрядчике <span aria-hidden="true">↓</span>
-                </button>
-              </article>
-            ))}
+            {result.matches.map(({ contractor, explanation }) => renderCard(contractor, explanation, true))}
           </div>
         )}
+        {!result && !isSearching && <div className="home-result-grid">{previewContractors.map((contractor) => renderCard(contractor))}</div>}
       </section>
 
       {selectedProfile && <ContractorDetails selection={selectedProfile} onBack={backToCard} targetId={profileId} />}
+
+      <section className="home-map-section" id="map" aria-labelledby={`${componentId}-map-title`}>
+        <div className="home-section-heading"><div><p className="home-section-eyebrow">География событий</p><h2 id={`${componentId}-map-title`}>Посмотрите на карте</h2></div><span className="home-map-label"><UiIcon name="pin" />Казахстан</span></div>
+        <p className="home-muted">Демонстрационная карта. Нажмите на маркер, чтобы познакомиться с профилем.</p>
+        <KazakhstanMap onOpenDetails={(preview, trigger) => {
+          const contractor = contractors.find((profile) => profile.anon_name === preview.anon_name && profile.city === preview.city);
+          openProfile({
+            contractor: contractor ?? { ...preview, id: `demo-${preview.city}-${preview.anon_name}` },
+            source: contractor ? "catalog" : "demo",
+            date: form.date || undefined,
+          }, trigger);
+        }} />
+      </section>
     </main>
   );
 }

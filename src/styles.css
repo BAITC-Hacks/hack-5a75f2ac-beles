@@ -1,16 +1,17 @@
 :root {
   font-family: "Segoe UI", system-ui, sans-serif;
-  color: #16382e;
-  background: #f6f8f7;
+  color: #223c33;
+  background: #f8f8f2;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
-body { margin: 0; min-width: 320px; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; -webkit-font-smoothing: antialiased; }
 button, input, select { font: inherit; }
-button:focus-visible, input:focus-visible, select:focus-visible {
-  outline: 3px solid #08916a;
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
+  outline: 3px solid #458376;
   outline-offset: 3px;
 }
-button:not(:disabled):hover { filter: brightness(0.95); }
 input:disabled, select:disabled { opacity: 0.65; }
-::selection { background: #b8e4ce; }
+::selection { background: #edcf80; color: #294636; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
