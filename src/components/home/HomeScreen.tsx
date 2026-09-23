@@ -6,7 +6,6 @@ import contractors from "../../../data/contractors.json";
 import KazakhstanMap from "../common/KazakhstanMap";
 import ContractorDetails from "../common/ContractorDetails";
 import type { ContractorSelection } from "../common/ContractorDetails";
-import eventAtmosphere from "../../assets/event-atmosphere.png";
 import "./HomeScreen.css";
 
 const priceFormatter = new Intl.NumberFormat("ru-KZ");
@@ -152,14 +151,6 @@ export function HomeScreen() {
     detailsTriggerRef.current = null;
   }
 
-  function chooseCollection(collection: typeof COLLECTIONS[number]) {
-    setCollectionId(collection.id);
-    setForm((current) => ({ ...current, category: collection.category }));
-    setResult(null);
-    setSelectedProfile(null);
-    detailsTriggerRef.current = null;
-  }
-
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isSearching) return;
@@ -255,26 +246,8 @@ export function HomeScreen() {
         <div className="home-nav-links"><a href="#search">Подбор</a><a href="#catalog">Каталог</a><a href="#map">Карта</a></div>
         <span className="home-nav-location"><UiIcon name="pin" />Казахстан</span>
       </nav>
-      <header className="home-header">
-        <div className="home-hero-copy">
-          <p className="home-eyebrow"><span />Для ваших особенных событий</p>
-          <h1>Ваше событие.<br /><em>Ваша команда.</em></h1>
-          <p className="home-hero-description">От первого «а что, если» до последнего танца.<br className="home-desktop-break" /> Найдите людей и места, с которыми всё сложится.</p>
-          <div className="home-collections" role="group" aria-label="Категории подрядчиков">
-            {COLLECTIONS.map((collection) => <button key={collection.id} type="button" aria-pressed={collectionId === collection.id} disabled={isSearching} onClick={() => chooseCollection(collection)}><UiIcon name={collection.id} />{collection.label}</button>)}
-          </div>
-          <p className="home-catalog-note">{catalog.total} профилей <span>·</span> {catalog.categories.length} категорий <span>·</span> Казахстан</p>
-        </div>
-        <div className="home-hero-visual">
-          <div className="home-hero-orbit" aria-hidden="true" />
-          <figure className="home-hero-image"><img src={eventAtmosphere} alt="Атмосфера события: светлый зал, цветы и праздничный стол" width="1086" height="1448" /><figcaption>Место для ваших воспоминаний</figcaption></figure>
-          <span className="home-hero-spark" aria-hidden="true"><UiIcon name="spark" /></span>
-          <div className="home-hero-note"><span><UiIcon name="spark" /></span><p>Хорошая команда.<br /><strong>Особенный день.</strong></p></div>
-        </div>
-      </header>
-
       <form id="search" className="home-search" onSubmit={handleSearch} aria-label="Поиск подрядчиков" aria-busy={isSearching}>
-        <div className="home-search-heading"><div><p className="home-section-eyebrow">Начнём с главного</p><h2>Что вы планируете?</h2></div><span className="home-search-note">До 3 подходящих вариантов<br />с понятным объяснением</span></div>
+        <div className="home-search-heading"><div><p className="home-section-eyebrow">Начнём с главного</p><h1>Что вы планируете?</h1></div><span className="home-search-note">До 3 подходящих вариантов<br />с понятным объяснением</span></div>
         <fieldset disabled={isSearching}>
           <div className="home-fields">
             <label>

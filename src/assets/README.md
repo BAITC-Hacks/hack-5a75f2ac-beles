@@ -1,6 +1,7 @@
 # Event atmosphere
 
-`event-atmosphere.png` is an AI-generated editorial image used for the homepage hero.
+`event-atmosphere.png` is an AI-generated editorial image from the previous homepage hero.
+The hero has been removed; this design source is no longer imported or included in the build.
 It illustrates an event atmosphere and does not depict any specific contractor or venue
 from the catalog. Generated with the built-in `image_gen` tool; 1086 × 1448 pixels.
 
