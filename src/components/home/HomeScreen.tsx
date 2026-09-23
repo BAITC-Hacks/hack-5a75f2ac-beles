@@ -7,6 +7,7 @@ import contractors from "../../../data/contractors.json";
 import KazakhstanMap from "../common/KazakhstanMap";
 import ContractorDetails from "../common/ContractorDetails";
 import type { ContractorSelection } from "../common/ContractorDetails";
+import hackalemLogo from "../../assets/hackalem-logo.png";
 import "./HomeScreen.css";
 
 const priceFormatter = new Intl.NumberFormat("ru-KZ");
@@ -240,7 +241,7 @@ export function HomeScreen() {
   return (
     <main className="home-screen" id="top">
       <nav className="home-nav" aria-label="Навигация по странице">
-        <a href="#top" className="home-brand" aria-label="HACKALEM AI — наверх"><span className="home-brand-mark">h<span>↗</span></span><span>HACKALEM<span className="home-brand-ai"> AI</span></span></a>
+        <a href="#top" className="home-brand" aria-label="HACKALEM AI — наверх"><img className="home-brand-mark" src={hackalemLogo} alt="" width="39" height="39" /><span>HACKALEM<span className="home-brand-ai"> AI</span></span></a>
         <div className="home-nav-links"><a href="#search">Подбор</a><a href="#catalog">Каталог</a><a href="#map">Карта</a></div>
         <span className="home-nav-location"><UiIcon name="pin" />Казахстан</span>
       </nav>
