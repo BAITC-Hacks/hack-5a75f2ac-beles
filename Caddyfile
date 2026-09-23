@@ -1,0 +1,5 @@
+# Local-only entry point. Public HTTPS needs a domain and server first.
+:80 {
+    encode zstd gzip
+    reverse_proxy app:3000
+}

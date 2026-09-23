@@ -1,5 +1,3 @@
-"use client";
-
 import { useId, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
 import type { MatchResponse } from "../../types";
@@ -114,10 +112,12 @@ export function HomeScreen() {
       }}
     >
       <header>
+        <p style={{ margin: "0 0 16px", color: "#047857", fontWeight: 700, letterSpacing: 2, fontSize: 13 }}>HACKALEM AI</p>
         <h1 style={{ margin: "0 0 8px", fontSize: 30 }}>Найдите подрядчика для события</h1>
         <p style={{ margin: 0, color: "#526c63" }}>
           Укажите детали — подберём варианты и объясним, почему они вам подходят.
         </p>
+        <p style={{ margin: "10px 0 0", color: "#526c63", fontSize: 13 }}>Демонстрационная версия · Подрядчики и цены вымышлены</p>
       </header>
 
       <form onSubmit={handleSearch} aria-label="Поиск подрядчиков" aria-busy={isSearching}>

@@ -1,0 +1,16 @@
+:root {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: #16382e;
+  background: #f6f8f7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+body { margin: 0; min-width: 320px; }
+button, input, select { font: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid #08916a;
+  outline-offset: 3px;
+}
+button:not(:disabled):hover { filter: brightness(0.95); }
+input:disabled, select:disabled { opacity: 0.65; }
+::selection { background: #b8e4ce; }
