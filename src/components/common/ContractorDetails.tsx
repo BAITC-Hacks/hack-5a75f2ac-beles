@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { Contractor, MatchResponse } from "../../types";
+import { getContractorImage } from "../../data/contractor-images";
 import "./ContractorDetails.css";
 
 export type ContractorSelection = {
@@ -36,6 +37,7 @@ function formatDate(value: string): string {
 export default function ContractorDetails({ selection, onBack, targetId }: ContractorDetailsProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const { contractor, source, date, explanation, explanationSource } = selection;
+  const photo = getContractorImage(contractor);
   const isCatalog = source === "catalog";
   const hasCalendar = isCatalog && Array.isArray(contractor.busy_dates);
   const requestedDateInRange = Boolean(date && isValidDate(date) && date >= MIN_DATE && date <= MAX_DATE);
@@ -65,13 +67,19 @@ export default function ContractorDetails({ selection, onBack, targetId }: Contr
       </div>
 
       <header className="contractor-details__header">
-        <div>
-          <div className="contractor-details__badges">
-            <span>{contractor.city}</span>
-            {isCatalog && contractor.synthetic && <span className="contractor-details__synthetic">Синтетическая запись</span>}
+        <div className="contractor-details__identity">
+          <figure className="contractor-details__photo">
+            <img src={photo.src} alt={photo.alt} decoding="async" style={{ objectPosition: photo.position }} />
+            <figcaption>ИИ-иллюстрация</figcaption>
+          </figure>
+          <div>
+            <div className="contractor-details__badges">
+              <span>{contractor.city}</span>
+              {isCatalog && contractor.synthetic && <span className="contractor-details__synthetic">Синтетическая запись</span>}
+            </div>
+            <h2 id={`${targetId}-title`}>{contractor.anon_name}</h2>
+            <p className="contractor-details__categories">{contractor.categories.join(" · ")}</p>
           </div>
-          <h2 id={`${targetId}-title`}>{contractor.anon_name}</h2>
-          <p className="contractor-details__categories">{contractor.categories.join(" · ")}</p>
         </div>
         <div className="contractor-details__price-block">
           <span className="contractor-details__price-label">Стоимость от</span>
@@ -80,6 +88,7 @@ export default function ContractorDetails({ selection, onBack, targetId }: Contr
           {isCatalog && contractor.price_imputed && <p className="contractor-details__note">Цена заполнена при подготовке датасета.</p>}
         </div>
       </header>
+      <p className="contractor-details__image-note">Изображение создано ИИ для оформления каталога и не является реальной фотографией подрядчика.</p>
 
       {!isCatalog ? (
         <div className="contractor-details__notice">

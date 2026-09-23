@@ -17,6 +17,12 @@
 .contractor-details__back:focus-visible, .contractor-details__calendar summary:focus-visible { outline: 3px solid #007db8; outline-offset: 4px; }
 .contractor-details__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; padding-bottom: 28px; border-bottom: 1px solid #d8e5f0; }
 .contractor-details__header > div { min-width: 0; }
+.contractor-details__identity { display: flex; flex: 1; align-items: center; gap: 22px; }
+.contractor-details__identity > div { min-width: 0; }
+.contractor-details__photo { position: relative; flex: 0 0 164px; aspect-ratio: 1; margin: 0; overflow: hidden; border-radius: 22px; background: #edf5ff; }
+.contractor-details__photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.contractor-details__photo figcaption { position: absolute; inset: auto 8px 8px; padding: 4px 6px; border-radius: 7px; background: #f8fbfff2; color: #183e60; font-size: 9px; line-height: 1.5; text-align: center; }
+.contractor-details__image-note { margin: 14px 0 0; color: #46617e; font-size: 11px; line-height: 1.7; }
 .contractor-details__badges { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 15px; }
 .contractor-details__badges span { padding: 5px 11px; border: 1px solid #cbddec; border-radius: 999px; background: #edf5ff; color: #007db8; font-size: 11px; line-height: 1.5; }
 .contractor-details__badges .contractor-details__synthetic { border-color: #eadcaa; background: #f7edc9; color: #715a27; }
@@ -55,10 +61,15 @@
 .contractor-details__month li { padding: 6px 10px; border: 1px solid #d8e5f0; border-radius: 10px; background: #edf5ff; color: #46617e; font-size: 12px; line-height: 1.6; }
 .contractor-details__month .contractor-details__selected-day { border-color: #d6b254; background: #ecc975; color: #53431f; font-weight: 600; }
 
+@media (max-width: 900px) {
+  .contractor-details__identity { flex-wrap: wrap; gap: 16px; }
+}
 @media (max-width: 640px) {
   .contractor-details { padding: 22px; border-radius: 28px; }
   .contractor-details__topline { margin-bottom: 24px; }
   .contractor-details__header { flex-direction: column; gap: 22px; }
+  .contractor-details__identity { width: 100%; }
+  .contractor-details__photo { flex-basis: 128px; }
   .contractor-details__price-block { max-width: none; width: 100%; padding: 18px 20px; }
   .contractor-details__body { grid-template-columns: 1fr; gap: 24px; padding: 24px 0; }
   .contractor-details__facts { padding: 22px; border-radius: 24px; }

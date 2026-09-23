@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { Contractor, MatchResponse } from "../../types";
 import catalog from "../../data/catalog-options.json";
+import { getContractorImage } from "../../data/contractor-images";
 import contractors from "../../../data/contractors.json";
 import KazakhstanMap from "../common/KazakhstanMap";
 import ContractorDetails from "../common/ContractorDetails";
@@ -72,10 +73,6 @@ function UiIcon({ name }: { name: string }) {
     {name === "search" && <><circle cx="10.5" cy="10.5" r="7" /><path d="m16 16 5 5" /></>}
     {name === "spark" && <path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z" />}
   </svg>;
-}
-
-function contractorKind(contractor: Contractor) {
-  return COLLECTIONS.slice(1).find((collection) => collection.categories.some((category) => contractor.categories.includes(category)))?.id ?? "service";
 }
 
 function MessageIcon({ warning }: { warning: boolean }) {
@@ -206,11 +203,12 @@ export function HomeScreen() {
     : contractors.filter((contractor) => activeCollection.categories.some((category) => contractor.categories.includes(category))).slice(0, 3);
 
   function renderCard(contractor: Contractor, explanation?: string, matched = false) {
-    const kind = contractorKind(contractor);
+    const photo = getContractorImage(contractor);
     return <article key={contractor.id} className={`home-result-card${selectedProfile?.contractor.id === contractor.id ? " home-result-card--selected" : ""}`}>
-      <div className={`home-card-cover home-card-cover--${kind}`} aria-hidden="true">
-        <span className="home-card-cover-category">{contractor.categories[0]}</span>
-        <UiIcon name={kind} /><span className="home-card-cover-pattern" />
+      <div className="home-card-cover">
+        <img src={photo.src} alt={photo.alt} loading="lazy" decoding="async" style={{ objectPosition: photo.position }} />
+        <span className="home-card-image-label">ИИ-иллюстрация</span>
+        <span className="home-card-cover-category" aria-hidden="true">{contractor.categories[0]}</span>
       </div>
       <div className="home-card-content">
         <div className="home-contractor-badges">
