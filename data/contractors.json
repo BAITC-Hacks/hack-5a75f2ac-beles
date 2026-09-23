@@ -1,0 +1,80 @@
+[
+  {
+    "id": "demo-1",
+    "anon_name": "Зал у Каспия",
+    "categories": ["venue"],
+    "city": "Атырау",
+    "price_from_kzt": 250000,
+    "event_formats": ["wedding", "corporate", "birthday"],
+    "languages": ["ru", "kk"],
+    "max_hours": 8,
+    "busy_dates": ["2026-09-26"],
+    "description": "Демонстрационная площадка: банкетный зал с отдельной зоной для церемонии и танцполом. Подходит для свадеб, корпоративов и дней рождения. Кейтеринг оплачивается отдельно.",
+    "synthetic": true
+  },
+  {
+    "id": "demo-2",
+    "anon_name": "Ведущий Арман",
+    "categories": ["talent"],
+    "city": "Актобе",
+    "price_from_kzt": 120000,
+    "event_formats": ["wedding", "corporate", "birthday"],
+    "languages": ["ru", "kk"],
+    "max_hours": 6,
+    "busy_dates": ["2026-09-27"],
+    "description": "Демонстрационный ведущий: проводит программу на русском и казахском языках, готовит индивидуальный сценарий и интерактивы для гостей. Звуковое оборудование в стоимость не входит.",
+    "synthetic": true
+  },
+  {
+    "id": "demo-3",
+    "anon_name": "Свет и звук",
+    "categories": ["service"],
+    "city": "Астана",
+    "price_from_kzt": 90000,
+    "event_formats": ["corporate", "concert", "wedding"],
+    "languages": ["ru", "kk"],
+    "max_hours": 8,
+    "busy_dates": ["2026-10-03"],
+    "description": "Демонстрационная команда: привозит акустическую систему, микрофоны и сценический свет. В базовую стоимость входят монтаж и работа звукорежиссёра на мероприятии.",
+    "synthetic": true
+  },
+  {
+    "id": "demo-4",
+    "anon_name": "Студия декора",
+    "categories": ["service"],
+    "city": "Караганда",
+    "price_from_kzt": 75000,
+    "event_formats": ["wedding", "birthday", "corporate"],
+    "languages": ["ru", "kk"],
+    "max_hours": 6,
+    "busy_dates": [],
+    "description": "Демонстрационная студия: оформляет фотозону и столы в согласованной цветовой гамме. Базовая стоимость включает аренду декора, монтаж и демонтаж; живая флористика рассчитывается отдельно.",
+    "synthetic": true
+  },
+  {
+    "id": "demo-5",
+    "anon_name": "Группа Saz",
+    "categories": ["talent"],
+    "city": "Шымкент",
+    "price_from_kzt": 180000,
+    "event_formats": ["wedding", "corporate", "concert"],
+    "languages": ["ru", "kk"],
+    "max_hours": 4,
+    "busy_dates": ["2026-10-10"],
+    "description": "Демонстрационная музыкальная группа: исполняет живые каверы на казахском и русском языках. Программа состоит из двух сетов по 45 минут; сценический звук предоставляет организатор.",
+    "synthetic": true
+  },
+  {
+    "id": "demo-6",
+    "anon_name": "Сад Алматы",
+    "categories": ["venue"],
+    "city": "Алматы",
+    "price_from_kzt": 350000,
+    "event_formats": ["wedding", "birthday", "corporate"],
+    "languages": ["ru", "kk"],
+    "max_hours": 10,
+    "busy_dates": ["2026-09-26", "2026-10-03"],
+    "description": "Демонстрационная площадка: сад с крытой террасой и зоной для выездной церемонии. В стоимость входит аренда пространства; питание и оформление заказываются отдельно.",
+    "synthetic": true
+  }
+]
